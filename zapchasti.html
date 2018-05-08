@@ -1,0 +1,156 @@
+﻿<?php
+$dbc = mysqli_connect('il280962.mysql.tools', 'il280962_kovtdb', 'qaz12345', 'il280962_kovtdb');
+	
+	mysqli_query($dbc, "SET NAMES 'utf8' COLLATE 'utf8_general_ci'");
+	mysqli_query($dbc, "SET CHARACTER SET 'utf8'");
+
+if(!isset($_COOKIE['user_id'])) {
+	if(isset($_POST['submit'])) {
+		$user_username = mysqli_real_escape_string($dbc, trim($_POST['username']));
+		$user_password = mysqli_real_escape_string($dbc, trim($_POST['password']));
+		if(!empty($user_username) && !empty($user_password)) {
+			$query = "SELECT `user_id` , `username` FROM `signup` WHERE username = '$user_username' AND password = SHA('$user_password')";
+			$data = mysqli_query($dbc,$query);
+			if(mysqli_num_rows($data) == 1) {
+				$row = mysqli_fetch_assoc($data);
+				setcookie('user_id', $row['user_id'], time() + (60*60*24*30));
+				setcookie('username', $row['username'], time() + (60*60*24*30));
+				$home_url = 'http://' . $_SERVER['HTTP_HOST'];
+				header('Location: '. $home_url);
+			}
+			else {
+				echo 'Извините, вы должны ввести правильные имя пользователя и пароль';
+			}
+		}
+		else {
+			echo 'Извините вы должны заполнить поля правильно';
+		}
+	}
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="style/style.css" rel="stylesheet">
+</head>
+<body>
+<header>
+<ul>
+	<li><a href="/index.php">Главная</a></li>
+	<li><a href="/news.php">Новости</a></li>
+	<li><a href="/zapchasti.php">Магазин</a></li>
+	<li><a href="/contact.php">Обратная связь</a></li>
+</ul>
+</header>
+<content>
+	
+	<?if(isset($_GET['product_ID'])){?>
+	
+	
+	<h3>Оформление заказа</h3>
+	<br/>
+	<p>Спасибо за ващу покупку, наш менеджер свяжется с вами в ближайшее время</p>
+	<br/>
+	<p><b>Ваш заказ</b></p>
+	<br/>
+	<table width="100%" border="1">
+	<tr>	
+	<th align="center" height="50px;">Наименование</th>
+	<th align="center">Цена</th>	
+	</tr>
+	
+	<?
+	
+	$query = "SELECT * FROM `zapchasti` WHERE `id_tovara`='".$_GET['product_ID']."' LIMIT 1";			
+	$result = mysqli_query($dbc,$query);					
+			
+	while ($row = $result->fetch_assoc()) {
+	echo '<tr>	
+	<td align="center" height="50px;">'.$row['naimenovanie'].'</td>
+	<td align="center">'.$row['price'].'</td>
+	</tr>';	
+	
+	
+	if($row['ostatok']==0) { $octatok = 0; } else{ $octatok = $row['ostatok'] - 1; }
+	$query2 = "UPDATE `zapchasti` SET `ostatok` = '$octatok' WHERE `id_tovara` = '".$row['id_tovara']."' ";				
+	mysqli_query($dbc,$query2);
+	
+    }		
+	?>
+	</table>
+	<br/>
+	<br/>
+	<a href="http://www.test.101-studio.pro/zapchasti.php" style="padding: 5px 25px; background: #ecaa1f;   color: #fff;">Продолжиьт покупки</a>
+	<br/>
+	
+	<?}else{?>
+	
+	<table width="100%" border="1">
+	<tr>	
+	<th align="center" height="50px;">Наименование</th>
+	<th align="center">Цена</th>
+	<th align="center">Остаток</th>
+	<? if(!empty($_COOKIE['username'])) { ?>
+	<th align="center">Действие</th>
+	<?}?>
+	</tr>
+	
+	<?
+	
+
+	
+	$query = "SELECT * FROM `zapchasti` ORDER BY `id_tovara` DESC";			
+	$result = mysqli_query($dbc,$query);					
+			
+	while ($row = $result->fetch_assoc()) {
+	echo '<tr>	
+	<td align="center" height="50px;">'.$row['naimenovanie'].'</td>
+	<td align="center">'.$row['price'].'</td>
+	<td align="center">'.$row['ostatok'].'</td>';
+	
+	if(!empty($_COOKIE['username'])) {
+	echo '<td align="center"><a href="http://www.test.101-studio.pro/zapchasti.php?product_ID='.$row['id_tovara'].'" style="padding: 5px 25px; background: #ecaa1f;   color: #fff;">Купить</a></td>';
+	}		
+	echo '</tr>';	
+    }		
+	?>
+	</table>
+	
+	<?}?>
+	
+	
+<br/>
+<br/>
+</content>
+<section>
+<?php
+	if(empty($_COOKIE['username'])) {
+?>
+	<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
+		<label for="username">Логин:</label>
+	<input type="text" name="username">
+	<label for="password">Пароль:</label>
+	<input type="password" name="password">
+	<button type="submit" name="submit">Вход</button>
+	<a href="signup.php">Регистрация</a>
+	</form>
+<?php
+}
+else {
+	?>
+	<p><a href="/">Добро пожаловать <b><?php echo $_COOKIE['username']; ?></b></a></p>
+	<p><a href="exit.php">Выйти</a></p>
+<?php	
+}
+?>
+</section>
+
+
+<footer class="clear">
+	<p>Разработчик : Ковтун А.Г. 11 МБ КН (2017 год)</p>
+</footer>
+
+</body>
+
+</html>

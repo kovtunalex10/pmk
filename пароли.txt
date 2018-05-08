@@ -1,0 +1,8 @@
+https://adm.tools/hosting/account/ufm/?accid=280962
+логин: моя почта
+пароль: qaz12345
+
+БД: il280962_kovtdb
+пароль: qaz12345
+
+http://www.test.101-studio.pro
